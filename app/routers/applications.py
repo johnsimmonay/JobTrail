@@ -1,26 +1,27 @@
+# routers/applications.py
 from fastapi import APIRouter, status, Depends
+from sqlalchemy.orm import Session
 from app.schemas import ApplicationCreate, ApplicationRead
 from app.services import application_service as service
-from app.dependencies import ApplicationStore, get_store
 from typing import Annotated
-
+from app.database import get_db
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
 
-StoreDep = Annotated[ApplicationStore, Depends(get_store)]
+DbDep = Annotated[Session, Depends(get_db)]
 
 
 @router.get("/{application_id}", response_model=ApplicationRead)
-def get_application(application_id: int, store: StoreDep):
-    return service.get_application(application_id, store)
+def get_application(application_id: int, db: DbDep):
+    return service.get_application(application_id, db)
 
 
 @router.post("", response_model=ApplicationRead, status_code=status.HTTP_201_CREATED)
-def create_application(data: ApplicationCreate, store: StoreDep):
-    return service.create_application(data, store)
+def create_application(data: ApplicationCreate, db: DbDep):
+    return service.create_application(data, db)
 
 
 @router.get("", response_model=list[ApplicationRead])
-def get_all_applications(store: StoreDep):
-    return service.list_applications(store)
+def get_all_applications(db: DbDep):
+    return service.list_applications(db)

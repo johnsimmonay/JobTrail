@@ -1,6 +1,7 @@
+# app/schemas.py
 from datetime import datetime, date
 from enum import Enum
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, HttpUrl, Field, ConfigDict
 
 class ApplicationStatus(str, Enum):
     APPLIED = "applied"
@@ -27,5 +28,6 @@ class ApplicationCreate(BaseModel):
     location: str | None = None
 
 class ApplicationRead(ApplicationCreate):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     created_at: datetime

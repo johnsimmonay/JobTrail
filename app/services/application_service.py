@@ -1,29 +1,28 @@
-from datetime import datetime, timezone
+# services/application_service.py
 from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from app.schemas import ApplicationCreate
-from app.dependencies import ApplicationStore
+from app.models import Application
 
 
-def create_application(data: ApplicationCreate, store: ApplicationStore) -> dict:
+def create_application(data: ApplicationCreate, db: Session) -> Application:
+    new_app = Application(**data.model_dump(mode="json"))
 
-    application = {
-         **data.model_dump(),
-         "id": store.next_id,
-         "created_at": datetime.now(timezone.utc)
-    }
+    db.add(new_app)
+    db.commit()
+    db.refresh(new_app)
 
-    store.applications.append(application)
-    store.next_id += 1
-
-    return application
+    return new_app
 
 
-def get_application(application_id: int, store: ApplicationStore) -> dict:
-    for record in store.applications:
-            if record["id"] == application_id:
-                return record
-    raise HTTPException(status_code=404, detail="Application not found!")
+def get_application(application_id: int, db: Session) -> Application:
+    data = db.get(Application, application_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Application not found!")
+
+    return data
 
 
-def list_applications(store: ApplicationStore) -> list[dict]:
-    return store.applications
+def list_applications(db: Session) -> list[Application]:
+    return db.scalars(select(Application).order_by(Application.id)).all()
