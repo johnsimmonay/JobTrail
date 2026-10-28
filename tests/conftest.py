@@ -35,3 +35,24 @@ def client(create_test_table):
     finally:
         app.dependency_overrides.clear()
         test_db.close()
+
+
+@pytest.fixture
+def sample_application(client):
+    response = client.post(
+        "/applications",
+        json={
+            "company_name": "Example Company",
+            "job_title": "Backend Developer",
+            "applied_date": "2026-10-28",
+            "status": "applied",
+            "source": "linkedin",
+            "job_url": "https://example.com/jobs/123",
+            "notes": "Test application",
+            "location": "Manila",
+            }
+        )
+
+    assert response.status_code == 201
+
+    return response.json()

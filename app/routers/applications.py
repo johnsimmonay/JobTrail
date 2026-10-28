@@ -1,7 +1,7 @@
 # routers/applications.py
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
-from app.schemas import ApplicationCreate, ApplicationRead
+from app.schemas import ApplicationCreate, ApplicationRead, ApplicationUpdate
 from app.services import application_service as service
 from typing import Annotated
 from app.database import get_db
@@ -25,3 +25,7 @@ def create_application(data: ApplicationCreate, db: DbDep):
 @router.get("", response_model=list[ApplicationRead])
 def get_all_applications(db: DbDep):
     return service.list_applications(db)
+
+@router.patch("/{application_id}", response_model=ApplicationRead)
+def update_application(application_id: int, data: ApplicationUpdate, db: DbDep):
+    return service.update_application(application_id, data, db)

@@ -31,3 +31,13 @@ class ApplicationRead(ApplicationCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     created_at: datetime
+
+class ApplicationUpdate(BaseModel):
+    company_name: str = Field(min_length=1, max_length=100, default=None)
+    job_title: str = Field(min_length=1, max_length=100, default=None)
+    applied_date: date = Field(default=None)
+    status: ApplicationStatus = Field(default=None)
+    source: JobPlatform | None = None
+    job_url: HttpUrl | None = None
+    notes: str | None = None
+    location: str | None = None

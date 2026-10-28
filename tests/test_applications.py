@@ -1,4 +1,7 @@
 # test_applications.py
+from sqlalchemy import null
+
+
 def test_health(client):
     response = client.get("/health")
 
@@ -129,3 +132,68 @@ def test_defaults(client):
     assert data[0]["job_url"] is None
     assert data[0]["notes"] is None
     assert data[0]["location"] is None
+
+
+def test_patch_changes_only_sent_fields(client, sample_application):
+    application_id = sample_application["id"]
+
+    response = client.patch(
+        f"/applications/{application_id}",
+        json={"status": "offer"},
+        )
+
+    assert response.status_code == 200
+
+    updated = response.json()
+    expected = {**sample_application, "status": "offer"}
+
+    assert updated == expected
+
+def test_patch_null_required_field(client, sample_application):
+    application_id = sample_application["id"]
+
+    response = client.patch(
+        f"/applications/{application_id}",
+        json={"company_name": None},
+    )
+
+    assert response.status_code == 422
+
+def test_patch_missing_id(client):
+
+    response = client.patch(
+        "/applications/999",
+        json={"status": "rejected"}
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Application not found!"
+
+
+def test_patch_empty_body(client, sample_application):
+    application_id = sample_application["id"]
+
+    response = client.patch(
+        f"/applications/{application_id}",
+        json={}
+    )
+
+    assert response.status_code == 200
+    assert response.json() == sample_application
+
+
+def test_patch_nullable_field(client, sample_application):
+    application_id = sample_application["id"]
+
+    response = client.patch(
+        f"/applications/{application_id}",
+        json={"notes": None}
+    )
+
+    assert response.status_code == 200
+
+    updated = response.json()
+    expected = {**sample_application, "notes": None}
+
+    assert updated["notes"] == None
+    assert updated == expected
