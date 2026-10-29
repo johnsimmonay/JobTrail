@@ -17,24 +17,30 @@ test_Session = sessionmaker(
 )
 
 
+def override_get_db():
+    db = test_Session()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 @pytest.fixture
 def create_test_table():
     Base.metadata.create_all(test_engine)
     yield
     Base.metadata.drop_all(test_engine)
-        
+
 
 @pytest.fixture
 def client(create_test_table):
-    test_db = test_Session()
-    app.dependency_overrides[get_db] = lambda: test_db
+    app.dependency_overrides[get_db] = override_get_db
 
     try:
         with TestClient(app) as test_client:
             yield test_client
     finally:
         app.dependency_overrides.clear()
-        test_db.close()
 
 
 @pytest.fixture

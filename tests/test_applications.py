@@ -197,3 +197,35 @@ def test_patch_nullable_field(client, sample_application):
 
     assert updated["notes"] == None
     assert updated == expected
+
+def test_delete(client, sample_application):
+    application_id = sample_application["id"]
+
+    deleted = client.delete(
+        f"/applications/{application_id}"
+    )
+
+    assert deleted.status_code == 204
+    assert deleted.content == b""
+    assert client.get(f"/applications/{application_id}").status_code == 404
+
+def test_delete_missing_id(client):
+    deleted = client.delete("/applications/909")
+
+    assert deleted.status_code == 404
+
+def test_delete_one_of_two_records(client, sample_application):
+    first_id = sample_application["id"]
+
+    created = client.post("/applications", json={"company_name": "Another Company", "job_title": "Developer"})
+    assert created.status_code == 201
+    second_id = created.json()["id"]
+
+    deleted = client.delete(f"/applications/{first_id}")
+    assert deleted.status_code == 204
+
+    assert client.get(f"/applications/{second_id}").status_code == 200
+
+    listed = client.get("/applications")
+    assert listed.status_code == 200
+    assert [record["id"] for record in listed.json()] == [second_id]
