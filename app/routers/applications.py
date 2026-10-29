@@ -29,3 +29,7 @@ def get_all_applications(db: DbDep):
 @router.patch("/{application_id}", response_model=ApplicationRead)
 def update_application(application_id: int, data: ApplicationUpdate, db: DbDep):
     return service.update_application(application_id, data, db)
+
+@router.delete("/{application_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_application(application_id: int, db: DbDep):
+    return service.delete_application(application_id, db)

@@ -40,3 +40,9 @@ def update_application(application_id: int, data: ApplicationUpdate, db: Session
     db.refresh(db_app)
 
     return db_app
+
+def delete_application(application_id: int, db: Session) -> None:
+    row = get_application(application_id, db)
+
+    db.delete(row)
+    db.commit()
