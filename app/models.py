@@ -40,6 +40,7 @@ class Application(Base):
     )
     status: Mapped[str] = mapped_column(
         Text,
+        index=True,
         nullable=False,
         server_default=text("'applied'"),
     )
