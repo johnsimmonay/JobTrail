@@ -1,7 +1,7 @@
 # app/schemas.py
 from datetime import datetime, date
 from enum import Enum
-from pydantic import BaseModel, HttpUrl, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, HttpUrl, Field, ConfigDict, field_validator
 
 class ApplicationStatus(str, Enum):
     APPLIED = "applied"
@@ -41,3 +41,18 @@ class ApplicationUpdate(BaseModel):
     job_url: HttpUrl | None = None
     notes: str | None = None
     location: str | None = None
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def lowercase_email(cls, v: str) -> str:
+        return v.lower()
+
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    email: EmailStr
+    created_at: datetime
