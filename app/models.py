@@ -6,7 +6,9 @@ from sqlalchemy import (
     Date,
     DateTime,
     Identity,
+    Index,
     Text,
+    UniqueConstraint,
     func,
     text,
     String
@@ -53,3 +55,22 @@ class Application(Base):
         nullable=False,
         server_default=func.now(),
     )
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(
+        Identity(always=True),
+        primary_key=True,
+    )
+
+    email: Mapped[str] = mapped_column(Text, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+Index("uq_ix_email_lower", func.lower(User.email), unique=True)
