@@ -1,5 +1,8 @@
+from typing import Annotated
+
+from fastapi import Depends
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import DATABASE_URL
 
@@ -16,3 +19,5 @@ def get_db():
         yield db
     finally:
         db.close()
+
+DbDep = Annotated[Session, Depends(get_db)]

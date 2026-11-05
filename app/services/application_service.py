@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from app.schemas import ApplicationCreate, ApplicationUpdate
 from app.models import Application
 
-
 def create_application(data: ApplicationCreate, db: Session) -> Application:
     new_app = Application(**data.model_dump(mode="json"))
 

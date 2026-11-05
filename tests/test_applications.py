@@ -1,6 +1,4 @@
 # test_applications.py
-from sqlalchemy import null
-
 
 def test_health(client):
     response = client.get("/health")
@@ -22,6 +20,7 @@ def test_create_applications(client):
     assert "created_at" in data
     assert data["company_name"] == "dxc"
 
+
 def test_empty_company_name(client):
     response = client.post(
         "/applications",
@@ -30,6 +29,7 @@ def test_empty_company_name(client):
 
     assert response.status_code == 422
 
+
 def test_invalid_status(client):
     response = client.post(
         "/applications",
@@ -37,6 +37,7 @@ def test_invalid_status(client):
     )
 
     assert response.status_code == 422
+
 
 def test_created_id(client):
     create_response = client.post(
@@ -113,6 +114,7 @@ def test_optional_fields(client):
     assert data["location"] == loc
     assert data["notes"] == notes
 
+
 def test_defaults(client):
     response = client.post(
         "/applications",
@@ -149,6 +151,7 @@ def test_patch_changes_only_sent_fields(client, sample_application):
 
     assert updated == expected
 
+
 def test_patch_null_required_field(client, sample_application):
     application_id = sample_application["id"]
 
@@ -158,6 +161,7 @@ def test_patch_null_required_field(client, sample_application):
     )
 
     assert response.status_code == 422
+
 
 def test_patch_missing_id(client):
 
@@ -198,6 +202,7 @@ def test_patch_nullable_field(client, sample_application):
     assert updated["notes"] == None
     assert updated == expected
 
+
 def test_delete(client, sample_application):
     application_id = sample_application["id"]
 
@@ -209,10 +214,12 @@ def test_delete(client, sample_application):
     assert deleted.content == b""
     assert client.get(f"/applications/{application_id}").status_code == 404
 
+
 def test_delete_missing_id(client):
     deleted = client.delete("/applications/909")
 
     assert deleted.status_code == 404
+
 
 def test_delete_one_of_two_records(client, sample_application):
     first_id = sample_application["id"]

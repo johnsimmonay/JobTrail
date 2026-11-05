@@ -1,7 +1,14 @@
 # app/schemas.py
 from datetime import datetime, date
 from enum import Enum
-from pydantic import BaseModel, EmailStr, HttpUrl, Field, ConfigDict, field_validator
+from typing import Annotated
+from pydantic import AfterValidator, BaseModel, EmailStr, HttpUrl, Field, ConfigDict
+
+def normalize_email(v: str) -> str:
+    return v.strip().lower()
+
+NormalizedEmail = Annotated[EmailStr, AfterValidator(normalize_email)]
+
 
 class ApplicationStatus(str, Enum):
     APPLIED = "applied"
@@ -43,13 +50,8 @@ class ApplicationUpdate(BaseModel):
     location: str | None = None
 
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     password: str = Field(min_length=8, max_length=128)
-
-    @field_validator("email")
-    @classmethod
-    def lowercase_email(cls, v: str) -> str:
-        return v.lower()
 
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
