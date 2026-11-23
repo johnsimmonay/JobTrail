@@ -5,6 +5,7 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
+    ForeignKey,
     Identity,
     Index,
     Text,
@@ -32,6 +33,11 @@ class Application(Base):
     id: Mapped[int] = mapped_column(
         Identity(always=True),
         primary_key=True,
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
     )
     company_name: Mapped[str] = mapped_column(String(100), nullable=False)
     job_title: Mapped[str] = mapped_column(String(100), nullable=False)
