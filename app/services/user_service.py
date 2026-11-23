@@ -5,8 +5,10 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models import User
 from app.schemas import UserCreate, normalize_email
-from app.security import hash_password, verify_password
-from app.security import DUMMY_HASH
+from app.security import hash_password, verify_password, DUMMY_HASH
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def create_user(data: UserCreate, db: Session) -> User:
     new_user = User(

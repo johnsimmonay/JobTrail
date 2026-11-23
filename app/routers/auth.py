@@ -5,6 +5,7 @@ from app.security import create_access_token
 from app.services import user_service as service
 from app.database import DbDep
 from app.schemas import Token
+from app.dependencies import CurrentUser
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -26,3 +27,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: DbDep)
         )
     token = create_access_token(user.id)
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/me", response_model=UserRead)
+def read_me(current_user: CurrentUser):
+    return current_user

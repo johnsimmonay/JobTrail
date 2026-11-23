@@ -62,3 +62,30 @@ def sample_application(client):
     assert response.status_code == 201
 
     return response.json()
+
+@pytest.fixture
+def registered_user(client):
+    email = "monaypogi@example.com"
+    pword = "aaaaaaaaa"
+    response = client.post(
+        "/auth/register",
+        json={"email": email, "password": pword}
+    )
+
+    assert response.status_code == 201
+
+    return {"email": email, "password": pword, "id": response.json()["id"]}
+
+
+@pytest.fixture
+def auth_headers(client, registered_user):
+    login = client.post(
+        "/auth/login",
+        data={"username": registered_user["email"], "password": registered_user["password"]}
+    )
+
+    assert login.status_code == 200
+
+    token = login.json()["access_token"]
+
+    return {"Authorization": f"Bearer {token}"}
