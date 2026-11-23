@@ -1,15 +1,17 @@
 # test_applications.py
 
+
 def test_health(client):
     response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "version": 1}
-    
 
-def test_create_applications(client):
+
+def test_create_applications(client, auth_headers):
     response = client.post(
         "/applications",
+        headers=auth_headers,
         json={"company_name": "dxc", "job_title": "junior dev"},
     )
 
@@ -21,64 +23,69 @@ def test_create_applications(client):
     assert data["company_name"] == "dxc"
 
 
-def test_empty_company_name(client):
+def test_empty_company_name(client, auth_headers):
     response = client.post(
         "/applications",
+        headers=auth_headers,
         json={"company_name": "", "job_title": "dev"},
     )
 
     assert response.status_code == 422
 
 
-def test_invalid_status(client):
+def test_invalid_status(client, auth_headers):
     response = client.post(
         "/applications",
-        json={"company_name": "ddd", "job_title": "dev max", "status": "APPLYING"}
+        headers=auth_headers,
+        json={"company_name": "ddd", "job_title": "dev max", "status": "APPLYING"},
     )
 
     assert response.status_code == 422
 
 
-def test_created_id(client):
+def test_created_id(client, auth_headers):
     create_response = client.post(
         "/applications",
+        headers=auth_headers,
         json={"company_name": "dxc", "job_title": "junior dev"},
     )
 
     assert create_response.status_code == 201
     created = create_response.json()
 
-
     get_response = client.get(
-        f"/applications/{created["id"]}"
+        f"/applications/{created['id']}",
+        headers=auth_headers,
     )
 
     assert get_response.status_code == 200
     assert get_response.json() == created
 
 
-def test_nonexistent_application(client):
-    response = client.get("/applications/9999")
+def test_nonexistent_application(client, auth_headers):
+    response = client.get("/applications/9999", headers=auth_headers)
 
     assert response.status_code == 404
 
 
-def test_two_records(client):
+def test_two_records(client, auth_headers):
     record1 = client.post(
         "/applications",
-        json={"company_name": 'lipa tech', "job_title": "developer"}
-        )
+        headers=auth_headers,
+        json={"company_name": "lipa tech", "job_title": "developer"},
+    )
 
     assert record1.status_code == 201
 
     record2 = client.post(
         "/applications",
-        json={"company_name": 'sanpablo tech', "job_title": "developer maxx"}
-        )
+        headers=auth_headers,
+        json={"company_name": "sanpablo tech", "job_title": "developer maxx"},
+    )
 
     assert record2.status_code == 201
 
-    response = client.get("/applications")
+    response = client.get("/applications", headers=auth_headers)
 
     data = response.json()
 
@@ -88,7 +95,7 @@ def test_two_records(client):
     assert data[1]["company_name"] == "sanpablo tech"
 
 
-def test_optional_fields(client):
+def test_optional_fields(client, auth_headers):
     company = "lipa tech"
     job_title = "developer"
     job_url = "https://example.com"
@@ -98,34 +105,42 @@ def test_optional_fields(client):
 
     response = client.post(
         "/applications",
-        json={"company_name": company, "job_title": job_title, "job_url": job_url, "source": source, "notes": notes, "location": loc}
-        )
+        headers=auth_headers,
+        json={
+            "company_name": company,
+            "job_title": job_title,
+            "job_url": job_url,
+            "source": source,
+            "notes": notes,
+            "location": loc,
+        },
+    )
 
     assert response.status_code == 201
 
-    record = client.get("/applications/1")
+    # use the id from the response instead of assuming it is 1
+    record = client.get(f"/applications/{response.json()['id']}", headers=auth_headers)
 
     data = record.json()
 
     assert data["company_name"] == company
     assert data["job_title"] == job_title
-    assert data["job_url"] == "https://example.com/" # HttpUrl normalizes URLs with trailing slash
+    assert data["job_url"] == "https://example.com/"  # HttpUrl normalizes URLs with trailing slash
     assert data["source"] == source
     assert data["location"] == loc
     assert data["notes"] == notes
 
 
-def test_defaults(client):
+def test_defaults(client, auth_headers):
     response = client.post(
         "/applications",
-        json={"company_name": "comp_name_test", "job_title": "job_title_test"}
-        )
+        headers=auth_headers,
+        json={"company_name": "comp_name_test", "job_title": "job_title_test"},
+    )
 
     assert response.status_code == 201
 
-    record = client.get(
-        "/applications"
-    )
+    record = client.get("/applications", headers=auth_headers)
 
     data = record.json()
 
@@ -136,13 +151,14 @@ def test_defaults(client):
     assert data[0]["location"] is None
 
 
-def test_patch_changes_only_sent_fields(client, sample_application):
+def test_patch_changes_only_sent_fields(client, auth_headers, sample_application):
     application_id = sample_application["id"]
 
     response = client.patch(
         f"/applications/{application_id}",
+        headers=auth_headers,
         json={"status": "offer"},
-        )
+    )
 
     assert response.status_code == 200
 
@@ -152,46 +168,49 @@ def test_patch_changes_only_sent_fields(client, sample_application):
     assert updated == expected
 
 
-def test_patch_null_required_field(client, sample_application):
+def test_patch_null_required_field(client, auth_headers, sample_application):
     application_id = sample_application["id"]
 
     response = client.patch(
         f"/applications/{application_id}",
+        headers=auth_headers,
         json={"company_name": None},
     )
 
     assert response.status_code == 422
 
 
-def test_patch_missing_id(client):
-
+def test_patch_missing_id(client, auth_headers):
     response = client.patch(
         "/applications/999",
-        json={"status": "rejected"}
+        headers=auth_headers,
+        json={"status": "rejected"},
     )
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Application not found!"
 
 
-def test_patch_empty_body(client, sample_application):
+def test_patch_empty_body(client, auth_headers, sample_application):
     application_id = sample_application["id"]
 
     response = client.patch(
         f"/applications/{application_id}",
-        json={}
+        headers=auth_headers,
+        json={},
     )
 
     assert response.status_code == 200
     assert response.json() == sample_application
 
 
-def test_patch_nullable_field(client, sample_application):
+def test_patch_nullable_field(client, auth_headers, sample_application):
     application_id = sample_application["id"]
 
     response = client.patch(
         f"/applications/{application_id}",
-        json={"notes": None}
+        headers=auth_headers,
+        json={"notes": None},
     )
 
     assert response.status_code == 200
@@ -199,40 +218,49 @@ def test_patch_nullable_field(client, sample_application):
     updated = response.json()
     expected = {**sample_application, "notes": None}
 
-    assert updated["notes"] == None
+    assert updated["notes"] is None
     assert updated == expected
 
 
-def test_delete(client, sample_application):
+def test_delete(client, auth_headers, sample_application):
     application_id = sample_application["id"]
 
     deleted = client.delete(
-        f"/applications/{application_id}"
+        f"/applications/{application_id}",
+        headers=auth_headers,
     )
 
     assert deleted.status_code == 204
     assert deleted.content == b""
-    assert client.get(f"/applications/{application_id}").status_code == 404
+    assert client.get(
+        f"/applications/{application_id}", headers=auth_headers
+    ).status_code == 404
 
 
-def test_delete_missing_id(client):
-    deleted = client.delete("/applications/909")
+def test_delete_missing_id(client, auth_headers):
+    deleted = client.delete("/applications/909", headers=auth_headers)
 
     assert deleted.status_code == 404
 
 
-def test_delete_one_of_two_records(client, sample_application):
+def test_delete_one_of_two_records(client, auth_headers, sample_application):
     first_id = sample_application["id"]
 
-    created = client.post("/applications", json={"company_name": "Another Company", "job_title": "Developer"})
+    created = client.post(
+        "/applications",
+        headers=auth_headers,
+        json={"company_name": "Another Company", "job_title": "Developer"},
+    )
     assert created.status_code == 201
     second_id = created.json()["id"]
 
-    deleted = client.delete(f"/applications/{first_id}")
+    deleted = client.delete(f"/applications/{first_id}", headers=auth_headers)
     assert deleted.status_code == 204
 
-    assert client.get(f"/applications/{second_id}").status_code == 200
+    assert client.get(
+        f"/applications/{second_id}", headers=auth_headers
+    ).status_code == 200
 
-    listed = client.get("/applications")
+    listed = client.get("/applications", headers=auth_headers)
     assert listed.status_code == 200
     assert [record["id"] for record in listed.json()] == [second_id]
