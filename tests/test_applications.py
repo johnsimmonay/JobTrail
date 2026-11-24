@@ -72,7 +72,7 @@ def test_two_records(client, auth_headers):
     record1 = client.post(
         "/applications",
         headers=auth_headers,
-        json={"company_name": "lipa tech", "job_title": "developer"},
+        json={"company_name": "lipa tech", "job_title": "developer", "applied_date": "2026-11-20"},
     )
 
     assert record1.status_code == 201
@@ -80,7 +80,7 @@ def test_two_records(client, auth_headers):
     record2 = client.post(
         "/applications",
         headers=auth_headers,
-        json={"company_name": "sanpablo tech", "job_title": "developer maxx"},
+        json={"company_name": "sanpablo tech", "job_title": "developer maxx", "applied_date": "2026-11-21"},
     )
 
     assert record2.status_code == 201
@@ -89,10 +89,10 @@ def test_two_records(client, auth_headers):
 
     data = response.json()
 
-    assert len(data) == 2
-    assert data[0]["id"] != data[1]["id"]
-    assert data[0]["company_name"] == "lipa tech"
-    assert data[1]["company_name"] == "sanpablo tech"
+    assert data["total"] == 2
+    assert [item["id"] for item in data["items"]] == [record2.json()["id"], record1.json()["id"]]
+    assert data["items"][1]["company_name"] == "lipa tech"
+    assert data["items"][0]["company_name"] == "sanpablo tech"
 
 
 def test_optional_fields(client, auth_headers):
@@ -144,11 +144,11 @@ def test_defaults(client, auth_headers):
 
     data = record.json()
 
-    assert data[0]["status"] == "applied"
-    assert data[0]["source"] is None
-    assert data[0]["job_url"] is None
-    assert data[0]["notes"] is None
-    assert data[0]["location"] is None
+    assert data["items"][0]["status"] == "applied"
+    assert data["items"][0]["source"] is None
+    assert data["items"][0]["job_url"] is None
+    assert data["items"][0]["notes"] is None
+    assert data["items"][0]["location"] is None
 
 
 def test_patch_changes_only_sent_fields(client, auth_headers, sample_application):
@@ -263,4 +263,4 @@ def test_delete_one_of_two_records(client, auth_headers, sample_application):
 
     listed = client.get("/applications", headers=auth_headers)
     assert listed.status_code == 200
-    assert [record["id"] for record in listed.json()] == [second_id]
+    assert [record["id"] for record in listed.json()["items"]] == [second_id]

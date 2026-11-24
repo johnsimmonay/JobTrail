@@ -52,10 +52,10 @@ def test_list_only_returns_own_records(
 
     list_b = client.get("/applications", headers=auth_headers_b)
     assert list_b.status_code == 200
-    assert [r["id"] for r in list_b.json()] == [created_b.json()["id"]]
+    assert [r["id"] for r in list_b.json()["items"]] == [created_b.json()["id"]]
 
     list_a = client.get("/applications", headers=auth_headers)
-    assert [r["id"] for r in list_a.json()] == [sample_application["id"]]
+    assert [r["id"] for r in list_a.json()["items"]] == [sample_application["id"]]
 
 
 def test_record_unchanged_after_other_user_attempts(
